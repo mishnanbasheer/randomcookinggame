@@ -16,6 +16,7 @@
     margin: 0;
     padding: 0;
     user-select: none;
+    -webkit-user-select: none;
 }
 
 body {
@@ -53,6 +54,7 @@ body {
     padding: 0 30px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .level-indicator {
@@ -114,6 +116,7 @@ body {
     cursor: pointer;
     box-shadow: var(--shadow);
     transition: transform 0.1s;
+    touch-action: manipulation;
 }
 
 #pause-btn:active {
@@ -128,6 +131,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
+    overflow: hidden;
 }
 
 #customer-area {
@@ -161,6 +165,7 @@ body {
     box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
     padding: 20px;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 #cooking-station {
@@ -168,10 +173,12 @@ body {
     justify-content: space-between;
     height: 100%;
     gap: 20px;
+    overflow-x: auto;
 }
 
 .station-section {
     flex: 1;
+    min-width: 0;
     background: var(--bg-color);
     border-radius: var(--border-radius);
     padding: 15px;
@@ -197,6 +204,7 @@ body {
     align-items: center;
     width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
 }
 
 .bins-column {
@@ -205,6 +213,7 @@ body {
     gap: 10px;
 }
 
+/* Touch & Drag Ingredients / Bins */
 .bin {
     width: 65px;
     height: 65px;
@@ -222,6 +231,8 @@ body {
     transition: transform 0.2s, box-shadow 0.2s;
     text-align: center;
     line-height: 1.2;
+    touch-action: none; /* Critical for mobile pointer events */
+    position: relative;
 }
 
 .bin:hover {
@@ -229,9 +240,12 @@ body {
     box-shadow: 0 12px 28px rgba(168, 230, 207, 0.6);
 }
 
+/* Cooking Slots */
 .cooking-slots {
     display: flex;
     gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .cooking-slot {
@@ -244,6 +258,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    touch-action: none; /* Critical for mobile pointer events */
 }
 
 .cooking-slot:hover {
@@ -317,19 +332,19 @@ body {
     50% { transform: translateY(-5px); }
 }
 
-/* Prep Board */
+/* Prep Board — now uses flex-wrap for dynamic slot addition */
 .prep-slots {
     display: flex;
-    gap: 15px;
-    width: 100%;
-    height: 100%;
+    gap: 10px;
+    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    max-width: 300px;
 }
 
 .prep-slot {
-    width: 80px;
-    height: 80px;
+    width: 72px;
+    height: 72px;
     background: #e8d5c4;
     border-radius: 10px;
     box-shadow: inset 0 2px 5px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.1);
@@ -340,7 +355,9 @@ body {
     cursor: pointer;
     font-size: 36px;
     transition: transform 0.2s, box-shadow 0.2s;
-    position: relative; /* For absolute stacked children */
+    position: relative;
+    touch-action: none; /* Critical for mobile */
+    flex-shrink: 0;
 }
 
 .prep-slot:hover {
@@ -365,14 +382,14 @@ body {
     transform: translateX(-50%);
     font-size: 36px;
     animation: pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    pointer-events: none; /* Let drag events hit the slot */
+    pointer-events: none;
 }
-.stack-item.layer-0 { z-index: 1; bottom: 5px; }  /* Bot Bun / Default single item */
-.stack-item.layer-1 { z-index: 2; bottom: 20px; } /* Patty */
-.stack-item.layer-2 { z-index: 3; bottom: 35px; } /* Lettuce / Tomato */
-.stack-item.layer-3 { z-index: 4; bottom: 50px; } /* Top Bun */
+.stack-item.layer-0 { z-index: 1; bottom: 5px; }
+.stack-item.layer-1 { z-index: 2; bottom: 20px; }
+.stack-item.layer-2 { z-index: 3; bottom: 35px; }
+.stack-item.layer-3 { z-index: 4; bottom: 50px; }
 
-/* Drag and Drop States */
+/* Drag and Drop / Pointer states */
 .dragging {
     opacity: 0.5;
     box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
@@ -389,6 +406,20 @@ body {
     filter: drop-shadow(0 0 10px var(--accent-mint));
 }
 
+/* Ghost element that follows finger on mobile */
+#drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    font-size: 50px;
+    transform: translate(-50%, -50%);
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.3));
+    transition: transform 0.05s;
+    display: none;
+    text-align: center;
+    line-height: 1;
+}
+
 /* Customer Leaving & Particles */
 .customer.served {
     animation: slide-out 0.5s forwards;
@@ -399,12 +430,12 @@ body {
 }
 
 .particle {
-    position: absolute;
+    position: fixed;
     width: 15px;
     height: 15px;
     border-radius: 50%;
     pointer-events: none;
-    z-index: 100;
+    z-index: 9999;
     animation: pop-particle 0.6s ease-out forwards;
 }
 
@@ -413,7 +444,7 @@ body {
     100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
 }
 
-/* --- Emine and Props (using image_12.png) --- */
+/* --- Emine and Props --- */
 #mumbai-tiffins-logo {
     position: absolute;
     top: 20px;
@@ -422,7 +453,7 @@ body {
     height: 150px;
     background-image: url('image_12.png');
     background-size: 600%; 
-    background-position: 50% 45%; /* Approximate crop for logo on apron */
+    background-position: 50% 45%;
     border-radius: 50%;
     opacity: 0.8;
     z-index: 1;
@@ -430,14 +461,14 @@ body {
 
 #tiffin-cart {
     position: absolute;
-    bottom: 80px; /* Behind counter */
+    bottom: 80px;
     left: 50%;
     transform: translateX(-50%);
     width: 350px;
     height: 250px;
     background-image: url('image_12.png');
     background-size: 250%; 
-    background-position: 80% 85%; /* Approximate crop for cart */
+    background-position: 80% 85%;
     z-index: 8;
     border-radius: 10px;
 }
@@ -451,7 +482,7 @@ body {
 }
 
 #service-counter {
-    z-index: 20; /* Counter overlaps everything slightly */
+    z-index: 20;
 }
 
 .emine-sprite {
@@ -459,7 +490,7 @@ body {
     height: 250px;
     background-image: url('image_12.png');
     background-size: 300%; 
-    background-position: 75% 35%; /* Face and torso */
+    background-position: 75% 35%;
     animation: idle-breathe 3s ease-in-out infinite;
     transform-origin: bottom center;
     transition: filter 0.5s ease;
@@ -564,29 +595,34 @@ body {
     border-radius: 30px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.2);
     text-align: center;
-    width: 80%;
-    max-width: 600px;
-    animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    width: 90%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modal-pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes modal-pop-in {
+    0% { opacity: 0; transform: scale(0.5); }
+    100% { opacity: 1; transform: scale(1); }
 }
 
 .shop-cards {
-    display: flex;
-    gap: 20px;
-    margin: 30px 0;
-    justify-content: center;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
 }
 
 .shop-card {
     background: white;
     padding: 20px;
     border-radius: 20px;
-    flex: 1 1 200px;
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .shop-card .card-icon {
@@ -604,6 +640,9 @@ body {
     transition: transform 0.1s;
     width: 100%;
     margin-top: auto;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    touch-action: manipulation;
 }
 
 .buy-btn:hover:not(:disabled) {
@@ -627,6 +666,8 @@ body {
     cursor: pointer;
     box-shadow: var(--shadow);
     transition: transform 0.1s;
+    font-family: 'Nunito', sans-serif;
+    touch-action: manipulation;
 }
 
 #next-shift-btn:hover {
@@ -663,6 +704,7 @@ body {
     background: #e9ecef;
     border: 4px solid #ced4da;
     box-shadow: inset 0 5px 10px rgba(0,0,0,0.1);
+    touch-action: none;
 }
 .coffee-active {
     animation: steam-pulse 1s infinite alternate;
@@ -706,13 +748,9 @@ body {
     box-shadow: var(--shadow);
     font-size: 24px;
     font-weight: bold;
-    animation: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: modal-pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 4;
-}
-
-@keyframes pop-in {
-    0% { opacity: 0; transform: scale(0.5); }
-    100% { opacity: 1; transform: scale(1); }
+    pointer-events: none;
 }
 
 .patience-bar-container {
@@ -728,10 +766,70 @@ body {
 .patience-bar {
     height: 100%;
     width: 100%;
-    background: var(--accent-mint); /* Green initially */
+    background: var(--accent-mint);
     transition: width 0.1s linear, background-color 0.3s ease;
 }
 
 .patience-bar-container.standard {
-    background: var(--accent-blue); /* Container turns soft blue when empty */
+    background: var(--accent-blue);
+}
+
+/* ===== NEW SLOT FLASH ANIMATION ===== */
+@keyframes slot-flash-gold {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 220, 80, 0); background: var(--bg-color); }
+    30%  { box-shadow: 0 0 0 8px rgba(255, 220, 80, 0.7); background: #fff9c4; }
+    60%  { box-shadow: 0 0 0 12px rgba(255, 220, 80, 0.4); background: #fffde7; }
+    100% { box-shadow: 0 0 0 0 rgba(255, 220, 80, 0); background: var(--bg-color); }
+}
+
+.new-slot-flash {
+    animation: slot-flash-gold 0.8s ease-out forwards !important;
+}
+
+/* Difficulty indicator pulse in level display */
+@keyframes level-pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.15); background: var(--accent-peach); }
+    100% { transform: scale(1); background: var(--accent-mint); }
+}
+
+.level-indicator.day-up {
+    animation: level-pulse 0.6s ease-out forwards;
+}
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 600px) {
+    #top-bar {
+        height: 60px;
+        padding: 0 12px;
+    }
+    .level-indicator { font-size: 18px; padding: 6px 12px; }
+    .happiness-bar-container { width: 100px; }
+    #happiness-score { font-size: 16px; }
+    .zen-meter { display: none; }
+    #pause-btn { padding: 8px 14px; font-size: 14px; }
+
+    #bottom-area {
+        height: auto;
+        min-height: 200px;
+        padding: 10px;
+    }
+    #cooking-station {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 10px;
+        overflow-x: auto;
+        height: auto;
+    }
+    .station-section {
+        min-width: 100px;
+        padding: 10px 8px;
+    }
+    .station-section h3 { font-size: 11px; }
+    .bin { width: 52px; height: 52px; font-size: 11px; }
+    .cooking-slot { width: 56px; height: 56px; }
+    .prep-slot { width: 60px; height: 60px; }
+    .customer-body { font-size: 54px; }
+    .modal-content { padding: 24px 16px; }
+    .shop-cards { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
 }

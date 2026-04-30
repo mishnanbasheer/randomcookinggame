@@ -2,12 +2,27 @@
 const GAME_CONFIG = {
     fps: 60,
     maxHappiness: 100,
-    customerSpawnRate: 17500,
-    patienceTime: 40000,
+    baseSpawnRate: 15000,
+    minSpawnRate: 4000,
+    spawnRateDecay: 1000,
+    basePatienceTime: 40000,
+    minPatienceTime: 18000,
+    patienceDecay: 2000,
     maxCustomers: 3,
     cookTime: 8000,
-    customersPerDay: 10
+    customersPerDay: 10,
+    maxGrillSlots: 4,
+    maxPrepSlots: 5
 };
+
+function getSpawnRate() {
+    if (gameState.phase === 'TUTORIAL') return 999999;
+    return Math.max(GAME_CONFIG.minSpawnRate, GAME_CONFIG.baseSpawnRate - (gameState.day * GAME_CONFIG.spawnRateDecay));
+}
+function getPatienceTime() {
+    if (gameState.phase === 'TUTORIAL') return 999999;
+    return Math.max(GAME_CONFIG.minPatienceTime, GAME_CONFIG.basePatienceTime - (gameState.day * GAME_CONFIG.patienceDecay));
+}
 
 // Game State
 let gameState = {
@@ -23,7 +38,9 @@ let gameState = {
     steamer: [null, null],
     grill: [null, null],
     coffee: [null],
-    prepBoard: [[], [], []], // Stacks of items
+    prepBoard: [[], [], []],
+    grillSlotCount: 2,
+    prepSlotCount: 3,
     
     // Progression State
     zen: 0,
@@ -234,7 +251,7 @@ function update(deltaTime) {
 
     // Customer Spawning (stop at customersPerDay)
     if (gameState.customersSpawnedThisDay < GAME_CONFIG.customersPerDay) {
-        if (gameState.lastTime - gameState.lastCustomerSpawnTime > GAME_CONFIG.customerSpawnRate) {
+        if (gameState.lastTime - gameState.lastCustomerSpawnTime > getSpawnRate()) {
             if (gameState.customers.length < GAME_CONFIG.maxCustomers) {
                 spawnCustomer();
                 gameState.customersSpawnedThisDay++;
@@ -295,7 +312,7 @@ function update(deltaTime) {
     gameState.customers.forEach(customer => {
         if (customer.state === 'bonus') {
             // Drain patience: 100% over patienceTime (ms)
-            const drainRate = 100 / (GAME_CONFIG.patienceTime / 1000); 
+            const drainRate = 100 / (getPatienceTime() / 1000); 
             customer.patience -= drainRate * (deltaTime / 1000);
 
             if (customer.patience <= 0) {
@@ -492,37 +509,212 @@ function togglePause() {
 // Start the game when window loads
 window.onload = initGame;
 
-// Interaction Setup & Handlers
+// ====== DYNAMIC SLOT RENDERING ======
+function renderGrillSlots() {
+    const container = document.getElementById('grill-slots-container');
+    container.innerHTML = '';
+    for (let i = 0; i < gameState.grillSlotCount; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'grill-slot cooking-slot dropzone';
+        slot.id = `grill-${i + 1}`;
+        slot.dataset.zone = 'grill';
+        slot.dataset.index = i;
+        container.appendChild(slot);
+    }
+    while (gameState.grill.length < gameState.grillSlotCount) gameState.grill.push(null);
+}
+
+function renderSteamerSlots() {
+    const container = document.getElementById('steamer-slots-container');
+    container.innerHTML = '';
+    for (let i = 0; i < gameState.steamer.length; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'steamer-slot cooking-slot dropzone';
+        slot.id = `steamer-${i + 1}`;
+        slot.dataset.zone = 'steamer';
+        slot.dataset.index = i;
+        container.appendChild(slot);
+    }
+}
+
+function renderPrepSlots() {
+    const container = document.getElementById('prep-slots-container');
+    container.innerHTML = '';
+    for (let i = 0; i < gameState.prepSlotCount; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'prep-slot dropzone';
+        slot.id = `prep-${i + 1}`;
+        slot.dataset.zone = 'prep';
+        slot.dataset.index = i;
+        container.appendChild(slot);
+    }
+    while (gameState.prepBoard.length < gameState.prepSlotCount) gameState.prepBoard.push([]);
+}
+
+function renderAllSlots() {
+    renderGrillSlots();
+    renderSteamerSlots();
+    renderPrepSlots();
+    rebindPointerEvents();
+}
+
+// ====== POINTER EVENT DRAG SYSTEM (Mobile + Desktop) ======
 let draggedData = null;
+let dragGhost = null;
+let dragSourceEl = null;
+let isDragging = false;
+
+function createDragGhost() {
+    if (document.getElementById('drag-ghost')) return document.getElementById('drag-ghost');
+    const g = document.createElement('div');
+    g.id = 'drag-ghost';
+    document.body.appendChild(g);
+    return g;
+}
+
+function getPointerXY(e) {
+    if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.changedTouches && e.changedTouches.length) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+}
+
+function onPointerDown(e) {
+    if (gameState.isShopOpen || !gameState.isRunning) return;
+    e.preventDefault();
+    const el = e.currentTarget;
+    let type = el.dataset.ingredient || el.dataset.type;
+    let sourceZone = el.dataset.zone || 'bin';
+    let sourceIndex = el.dataset.index || null;
+    if (!type) return;
+
+    // Tutorial gating
+    if (gameState.phase === 'TUTORIAL') {
+        if (gameState.tutorialStep === 1 && type !== '🥩') return;
+        if (gameState.tutorialStep === 2) return;
+        if (gameState.tutorialStep === 3 && type !== '🍞bot' && type !== '🥩') return;
+        if (gameState.tutorialStep === 4 && type !== '🥬' && type !== '🍔top') return;
+        if (gameState.tutorialStep === 5 && type !== 'prep_stack') return;
+    }
+
+    draggedData = { type, sourceZone, sourceIndex };
+    dragSourceEl = el;
+    isDragging = true;
+    el.classList.add('dragging');
+    audioManager.playSound('grab');
+
+    // Show ghost
+    dragGhost = createDragGhost();
+    let emoji = type;
+    if (type === 'prep_stack') emoji = '🍔';
+    else if (type === '🍞bot') emoji = '🍞';
+    else if (type === '🍔top') emoji = '🍔';
+    dragGhost.textContent = emoji;
+    dragGhost.style.display = 'block';
+    const pos = getPointerXY(e);
+    dragGhost.style.left = pos.x + 'px';
+    dragGhost.style.top = pos.y + 'px';
+}
+
+function onPointerMove(e) {
+    if (!isDragging || !dragGhost) return;
+    e.preventDefault();
+    const pos = getPointerXY(e);
+    dragGhost.style.left = pos.x + 'px';
+    dragGhost.style.top = pos.y + 'px';
+
+    // Highlight drop zones
+    document.querySelectorAll('.drop-active').forEach(el => el.classList.remove('drop-active'));
+    const elUnder = document.elementFromPoint(pos.x, pos.y);
+    if (elUnder) {
+        const dropzone = elUnder.closest('.dropzone');
+        if (dropzone && draggedData && isValidDrop(draggedData.type, dropzone.dataset.zone, dropzone.dataset.index)) {
+            dropzone.classList.add('drop-active');
+        }
+    }
+}
+
+function onPointerUp(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    isDragging = false;
+    if (dragGhost) dragGhost.style.display = 'none';
+    if (dragSourceEl) dragSourceEl.classList.remove('dragging');
+    document.querySelectorAll('.drop-active').forEach(el => el.classList.remove('drop-active'));
+
+    if (!draggedData) return;
+
+    const pos = getPointerXY(e);
+    const elUnder = document.elementFromPoint(pos.x, pos.y);
+    let dropzone = null;
+    if (elUnder) dropzone = elUnder.closest('.dropzone');
+
+    if (dropzone && isValidDrop(draggedData.type, dropzone.dataset.zone, dropzone.dataset.index)) {
+        let targetZone = dropzone.dataset.zone;
+        let targetIndex = parseInt(dropzone.dataset.index);
+        if (isNaN(targetIndex)) targetIndex = 0;
+        executeDrop(draggedData, targetZone, targetIndex, dropzone);
+        audioManager.playSound('drop');
+    } else {
+        audioManager.playSound('error');
+    }
+
+    draggedData = null;
+    dragSourceEl = null;
+}
+
+function bindPointerToDraggable(el) {
+    el.addEventListener('pointerdown', onPointerDown, { passive: false });
+    el.addEventListener('touchstart', onPointerDown, { passive: false });
+}
+
+function rebindPointerEvents() {
+    // Bins
+    document.querySelectorAll('.bin').forEach(bindPointerToDraggable);
+    // Cooking slots (for dragging cooked items)
+    document.querySelectorAll('.cooking-slot').forEach(bindPointerToDraggable);
+    // Prep slots
+    document.querySelectorAll('.prep-slot').forEach(bindPointerToDraggable);
+}
 
 function setupInteractions() {
+    // Create ghost element
+    createDragGhost();
+    
+    // Global move/up listeners
+    document.addEventListener('pointermove', onPointerMove, { passive: false });
+    document.addEventListener('pointerup', onPointerUp, { passive: false });
+    document.addEventListener('touchmove', onPointerMove, { passive: false });
+    document.addEventListener('touchend', onPointerUp, { passive: false });
+    document.addEventListener('pointercancel', onPointerUp, { passive: false });
+    document.addEventListener('touchcancel', onPointerUp, { passive: false });
+    
+    // Render dynamic slots and bind pointer events
+    renderAllSlots();
+
+    // Also keep HTML5 drag for desktop fallback
     document.querySelectorAll('.dropzone').forEach(zone => {
         zone.addEventListener('dragover', handleDragOver);
         zone.addEventListener('dragenter', handleDragEnter);
         zone.addEventListener('dragleave', handleDragLeave);
         zone.addEventListener('drop', handleDrop);
     });
-
     document.querySelectorAll('.bin').forEach(bin => {
         bin.addEventListener('dragstart', handleDragStart);
         bin.addEventListener('dragend', handleDragEnd);
     });
-    
     document.querySelectorAll('.prep-slot').forEach(slot => {
         slot.addEventListener('dragstart', handleDragStart);
         slot.addEventListener('dragend', handleDragEnd);
     });
-
     document.querySelectorAll('.cooking-slot').forEach(slot => {
         slot.addEventListener('dragstart', handleDragStart);
         slot.addEventListener('dragend', handleDragEnd);
     });
 
-    // Shop Event Listeners
+    // Shop
     document.querySelectorAll('.buy-btn').forEach(btn => {
         btn.addEventListener('click', () => handleBuy(btn));
     });
-    
     document.getElementById('next-shift-btn').addEventListener('click', nextShift);
 }
 
@@ -788,13 +980,28 @@ function updateShopButtons() {
     document.querySelectorAll('.buy-btn').forEach(btn => {
         const upgradeId = btn.dataset.upgrade;
         const cost = parseInt(btn.dataset.cost);
-        if (gameState.upgrades[upgradeId]) {
+
+        if (upgradeId === 'extraGrill') {
+            if (gameState.grillSlotCount >= GAME_CONFIG.maxGrillSlots) {
+                btn.innerText = 'MAX (4/4)';
+                btn.disabled = true;
+            } else {
+                btn.innerText = `Buy (${cost} 💖) [${gameState.grillSlotCount}/${GAME_CONFIG.maxGrillSlots}]`;
+                btn.disabled = gameState.score < cost;
+            }
+        } else if (upgradeId === 'expandPrep') {
+            if (gameState.prepSlotCount >= GAME_CONFIG.maxPrepSlots) {
+                btn.innerText = 'MAX (5/5)';
+                btn.disabled = true;
+            } else {
+                btn.innerText = `Buy (${cost} 💖) [${gameState.prepSlotCount}/${GAME_CONFIG.maxPrepSlots}]`;
+                btn.disabled = gameState.score < cost;
+            }
+        } else if (gameState.upgrades[upgradeId]) {
             btn.innerText = 'Owned';
             btn.disabled = true;
-        } else if (gameState.score < cost) {
-            btn.disabled = true;
         } else {
-            btn.disabled = false;
+            btn.disabled = gameState.score < cost;
         }
     });
 }
@@ -803,13 +1010,46 @@ function handleBuy(btn) {
     audioManager.playSound('click');
     const upgradeId = btn.dataset.upgrade;
     const cost = parseInt(btn.dataset.cost);
-    
+
+    // Handle repeatable infrastructure upgrades
+    if (upgradeId === 'extraGrill') {
+        if (gameState.score >= cost && gameState.grillSlotCount < GAME_CONFIG.maxGrillSlots) {
+            audioManager.playSound('success');
+            gameState.score -= cost;
+            gameState.grillSlotCount++;
+            gameState.grill.push(null);
+            renderGrillSlots();
+            rebindPointerEvents();
+            // Flash the new slot
+            const newSlot = document.getElementById(`grill-${gameState.grillSlotCount}`);
+            if (newSlot) newSlot.classList.add('new-slot-flash');
+            updateShopButtons();
+            ui.happinessScore.innerText = gameState.score;
+        }
+        return;
+    }
+    if (upgradeId === 'expandPrep') {
+        if (gameState.score >= cost && gameState.prepSlotCount < GAME_CONFIG.maxPrepSlots) {
+            audioManager.playSound('success');
+            gameState.score -= cost;
+            gameState.prepSlotCount++;
+            gameState.prepBoard.push([]);
+            renderPrepSlots();
+            rebindPointerEvents();
+            const newSlot = document.getElementById(`prep-${gameState.prepSlotCount}`);
+            if (newSlot) newSlot.classList.add('new-slot-flash');
+            updateShopButtons();
+            ui.happinessScore.innerText = gameState.score;
+        }
+        return;
+    }
+
+    // One-time upgrades
     if (gameState.score >= cost && !gameState.upgrades[upgradeId]) {
         audioManager.playSound('success');
         gameState.score -= cost;
         gameState.upgrades[upgradeId] = true;
-        
-        // Apply visual
+
         if (upgradeId === 'fairyLights') {
             ui.gameContainer.classList.add('has-fairy-lights');
         } else if (upgradeId === 'cat') {
@@ -819,9 +1059,9 @@ function handleBuy(btn) {
         } else if (upgradeId === 'mishnan') {
             document.getElementById('mishnan-sprite').classList.remove('hidden');
         }
-        
+
         updateShopButtons();
-        ui.happinessScore.innerText = gameState.score; // Instant UI update
+        ui.happinessScore.innerText = gameState.score;
     }
 }
 
@@ -831,7 +1071,11 @@ function nextShift() {
     gameState.day++;
     gameState.customersSpawnedThisDay = 0;
     gameState.customersServedThisDay = 0;
-    gameState.mishnanTimer = 0; // reset timer
+    gameState.mishnanTimer = 0;
     ui.shopModal.style.display = 'none';
     gameState.lastCustomerSpawnTime = gameState.lastTime = performance.now();
+    // Pulse the day indicator
+    const lvl = document.querySelector('.level-indicator');
+    lvl.classList.add('day-up');
+    setTimeout(() => lvl.classList.remove('day-up'), 700);
 }

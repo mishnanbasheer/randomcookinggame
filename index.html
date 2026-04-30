@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Emine's Cozy Cafe</title>
+    <meta name="description" content="A cozy drag-and-drop cooking game — serve customers, expand your kitchen, and master the art of tiffin!">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -61,10 +62,8 @@
                         <div class="bins-column">
                             <div class="bin" id="bin-batter" draggable="true" data-ingredient="🥟">🥣<br>Batter</div>
                         </div>
-                        <div class="cooking-slots">
-                            <div class="steamer-slot cooking-slot dropzone" id="steamer-1" data-zone="steamer" data-index="0"></div>
-                            <div class="steamer-slot cooking-slot dropzone" id="steamer-2" data-zone="steamer" data-index="1"></div>
-                        </div>
+                        <!-- Steamer slots injected by JS -->
+                        <div class="cooking-slots" id="steamer-slots-container"></div>
                     </div>
                 </div>
 
@@ -76,11 +75,8 @@
                             <div class="bin" id="bin-bot-bun" draggable="true" data-ingredient="🍞bot">🍞<br>Bot Bun</div>
                             <div class="bin" id="bin-top-bun" draggable="true" data-ingredient="🍔top">🍔<br>Top Bun</div>
                         </div>
-                        <div class="prep-slots">
-                            <div class="prep-slot dropzone" id="prep-1" data-zone="prep" data-index="0"></div>
-                            <div class="prep-slot dropzone" id="prep-2" data-zone="prep" data-index="1"></div>
-                            <div class="prep-slot dropzone" id="prep-3" data-zone="prep" data-index="2"></div>
-                        </div>
+                        <!-- Prep slots injected by JS -->
+                        <div class="prep-slots" id="prep-slots-container"></div>
                         <div class="bins-column">
                             <div class="bin" id="bin-lettuce" draggable="true" data-ingredient="🥬">🥬<br>Lettuce</div>
                             <div class="bin" id="bin-tomato" draggable="true" data-ingredient="🍅">🍅<br>Tomato</div>
@@ -90,16 +86,14 @@
 
                 <!-- Zone B: Grill/Fryer -->
                 <div id="grill-station" class="station-section">
-                    <h3>Grill & Fryer</h3>
+                    <h3>Grill &amp; Fryer</h3>
                     <div class="station-interactive">
                         <div class="bins-column">
                             <div class="bin" id="bin-dough" draggable="true" data-ingredient="🍩">🥯<br>Dough</div>
                             <div class="bin" id="bin-patty" draggable="true" data-ingredient="🥩">🥩<br>Patty</div>
                         </div>
-                        <div class="cooking-slots">
-                            <div class="grill-slot cooking-slot dropzone" id="grill-1" data-zone="grill" data-index="0"></div>
-                            <div class="grill-slot cooking-slot dropzone" id="grill-2" data-zone="grill" data-index="1"></div>
-                        </div>
+                        <!-- Grill slots injected by JS -->
+                        <div class="cooking-slots" id="grill-slots-container"></div>
                     </div>
                 </div>
 
@@ -140,6 +134,19 @@
                         <p>New menu item!</p>
                         <button class="buy-btn" data-upgrade="coffee" data-cost="150">Buy (150 💖)</button>
                     </div>
+                    <!-- Infrastructure Upgrades -->
+                    <div class="shop-card" id="card-extra-grill">
+                        <div class="card-icon">🔥</div>
+                        <h3>Extra Grill Pan</h3>
+                        <p>Cook more at once! (Max 4)</p>
+                        <button class="buy-btn" data-upgrade="extraGrill" data-cost="200">Buy (200 💖)</button>
+                    </div>
+                    <div class="shop-card" id="card-expand-prep">
+                        <div class="card-icon">🪵</div>
+                        <h3>Expand Prep Board</h3>
+                        <p>More assembly slots! (Max 5)</p>
+                        <button class="buy-btn" data-upgrade="expandPrep" data-cost="250">Buy (250 💖)</button>
+                    </div>
                     <!-- Mishnan -->
                     <div class="shop-card" id="card-mishnan">
                         <div class="card-icon">👨‍🍳</div>
@@ -168,7 +175,7 @@
         <div id="start-modal" class="modal-overlay">
             <div class="modal-content">
                 <h2>Welcome to Emine's Cozy Cafe! 🥟</h2>
-                <p>Drag and drop your way to cozy success!</p>
+                <p>Drag and drop your way to cozy success!<br><small style="opacity:0.7;">Works on mobile too! 📱</small></p>
                 <button id="start-btn" class="buy-btn" style="margin-top: 20px; font-size: 20px; padding: 15px 30px; background: var(--accent-blue);">Start Shift</button>
             </div>
         </div>
