@@ -892,7 +892,6 @@ function setupInteractions() {
     document.querySelectorAll('.buy-btn').forEach(btn => {
         btn.addEventListener('click', () => handleBuy(btn));
     });
-    document.getElementById('next-shift-btn').addEventListener('click', nextShift);
 }
 
 function handleDragStart(e) {
@@ -1299,19 +1298,4 @@ function handleBuy(btn) {
         updateShopButtons();
         ui.happinessScore.innerText = gameState.score;
     }
-}
-
-function nextShift() {
-    audioManager.playSound('click');
-    gameState.isShopOpen = false;
-    gameState.day++;
-    gameState.customersSpawnedThisDay = 0;
-    gameState.customersServedThisDay = 0;
-    gameState.mishnanTimer = 0;
-    ui.shopModal.style.display = 'none';
-    gameState.lastCustomerSpawnTime = gameState.lastTime = performance.now();
-    // Pulse the day indicator
-    const lvl = document.querySelector('.level-indicator');
-    lvl.classList.add('day-up');
-    setTimeout(() => lvl.classList.remove('day-up'), 700);
 }
