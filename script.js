@@ -1303,8 +1303,21 @@ function handleBuy(btn) {
 // ===== Mobile Layout & Scaling =====
 
 function scaleGame() {
-    // Game now fills 100% screen via CSS (position:fixed; inset:0)
-    // No JS scaling transform needed
+    const baseWidth = 1000;
+    const baseHeight = 562;
+
+    const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+
+    const scale = Math.min(vw / baseWidth, vh / baseHeight);
+
+    const game = document.querySelector(".game-container");
+    if (game) {
+        // top:50% left:50% puts top-left at center.
+        // translate(-50%,-50%) shifts it back by half its own size = perfect center.
+        // scale() then scales around that center point.
+        game.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }
 }
 
 function checkOrientation() {
