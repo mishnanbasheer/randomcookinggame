@@ -1363,18 +1363,12 @@ window.addEventListener("load", () => {
 
 // ===== Mobile Touch Hardening =====
 
-// Prevent double-tap zoom (iOS)
-let lastTouchEnd = 0;
-document.addEventListener('touchend', (e) => {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) e.preventDefault();
-    lastTouchEnd = now;
-}, { passive: false });
-
-// Prevent pinch zoom
+// Prevent pinch zoom only (safe - doesn't affect game drags)
 document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
 
-// Prevent pull-to-refresh
-document.body.addEventListener('touchmove', (e) => {
-    if (e.target === document.body) e.preventDefault();
+// Prevent pull-to-refresh ONLY when touch starts at the very top of body
+// (not on game elements)
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 1) e.preventDefault(); // block multi-touch zoom
 }, { passive: false });
+
