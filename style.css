@@ -45,25 +45,66 @@ body {
 
 /* --- Top Bar --- */
 #top-bar {
-    height: 80px;
+    height: 70px;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0 30px;
+    padding: 0 16px;
+    gap: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     z-index: 10;
     flex-shrink: 0;
 }
 
+.timer-display {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--text-color);
+    background: linear-gradient(135deg, #ffeaa7, #fdcb6e);
+    padding: 8px 16px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    white-space: nowrap;
+}
+
+.timer-display.timer-warning {
+    animation: timer-flash 0.5s infinite alternate;
+    background: linear-gradient(135deg, #fab1a0, #e17055);
+    color: white;
+}
+
+@keyframes timer-flash {
+    from { transform: scale(1); }
+    to { transform: scale(1.08); }
+}
+
+#shop-toggle-btn {
+    background: linear-gradient(135deg, var(--accent-mint), #81ecec);
+    border: none;
+    padding: 8px 16px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: transform 0.1s;
+    touch-action: manipulation;
+    font-family: 'Nunito', sans-serif;
+    white-space: nowrap;
+}
+
+#shop-toggle-btn:active { transform: scale(0.95); }
+
 .level-indicator {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 900;
     color: var(--text-color);
     background: var(--accent-mint);
-    padding: 10px 20px;
+    padding: 8px 14px;
     border-radius: var(--border-radius);
+    white-space: nowrap;
     box-shadow: var(--shadow);
 }
 
@@ -797,17 +838,201 @@ body {
     animation: level-pulse 0.6s ease-out forwards;
 }
 
+/* ===== COMBO HUD ===== */
+.combo-display {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    z-index: 50;
+    text-align: center;
+    pointer-events: none;
+    transition: transform 0.15s ease, opacity 0.3s ease;
+}
+
+#combo-count {
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--accent-mint);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: color 0.3s, transform 0.15s, text-shadow 0.3s;
+    line-height: 1;
+}
+
+#combo-label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+#combo-multiplier {
+    font-size: 18px;
+    font-weight: 900;
+    color: #f9dc5c;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.combo-display.combo-hot #combo-count {
+    color: #fdcb6e;
+    text-shadow: 0 0 20px rgba(253, 203, 110, 0.6);
+}
+
+.combo-display.combo-fire #combo-count {
+    color: #e17055;
+    text-shadow: 0 0 30px rgba(225, 112, 85, 0.8);
+    animation: combo-glow 0.4s infinite alternate;
+}
+
+@keyframes combo-glow {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
+@keyframes combo-bump {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+}
+
+.combo-bump {
+    animation: combo-bump 0.25s ease-out;
+}
+
+/* Floating combo text */
+.floating-text {
+    position: fixed;
+    font-size: 24px;
+    font-weight: 900;
+    color: #fdcb6e;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    pointer-events: none;
+    z-index: 9999;
+    animation: float-up 1s ease-out forwards;
+}
+
+@keyframes float-up {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
+}
+
+/* Screen pulse on big combos */
+@keyframes screen-pulse {
+    0% { box-shadow: inset 0 0 0 0 rgba(253, 203, 110, 0); }
+    50% { box-shadow: inset 0 0 60px 10px rgba(253, 203, 110, 0.25); }
+    100% { box-shadow: inset 0 0 0 0 rgba(253, 203, 110, 0); }
+}
+
+#game-container.combo-screen-pulse {
+    animation: screen-pulse 0.4s ease-out;
+}
+
+/* ===== MODE SELECTION ===== */
+.mode-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin: 24px 0 8px;
+    flex-wrap: wrap;
+}
+
+.mode-btn {
+    background: white;
+    border: 3px solid var(--accent-mint);
+    border-radius: 20px;
+    padding: 20px 24px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    box-shadow: var(--shadow);
+    touch-action: manipulation;
+    min-width: 120px;
+    font-family: 'Nunito', sans-serif;
+}
+
+.mode-btn:hover, .mode-btn:active {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 30px rgba(168, 230, 207, 0.6);
+}
+
+.mode-btn-featured {
+    border-color: #fdcb6e;
+    background: linear-gradient(135deg, #fffde7, #fff9c4);
+}
+
+.mode-time {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--text-color);
+    line-height: 1;
+}
+
+.mode-unit {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--accent-peach);
+    letter-spacing: 2px;
+}
+
+.mode-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-color);
+    opacity: 0.6;
+}
+
+/* ===== RESULTS MODAL ===== */
+.results-content {
+    max-width: 400px;
+}
+
+.results-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 24px 0;
+}
+
+.result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 14px 20px;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+.result-row span:last-child {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--accent-peach);
+}
+
 /* ===== MOBILE RESPONSIVE ===== */
 @media (max-width: 600px) {
     #top-bar {
-        height: 60px;
-        padding: 0 12px;
+        height: 56px;
+        padding: 0 8px;
+        gap: 6px;
     }
-    .level-indicator { font-size: 18px; padding: 6px 12px; }
-    .happiness-bar-container { width: 100px; }
-    #happiness-score { font-size: 16px; }
+    .level-indicator { font-size: 14px; padding: 5px 10px; }
+    .timer-display { font-size: 15px; padding: 5px 10px; }
+    .happiness-meter { padding: 6px 10px; gap: 6px; }
+    .happiness-bar-container { width: 60px; }
+    #happiness-score { font-size: 14px; min-width: 28px; }
     .zen-meter { display: none; }
-    #pause-btn { padding: 8px 14px; font-size: 14px; }
+    #pause-btn { padding: 6px 10px; font-size: 14px; }
+    #shop-toggle-btn { padding: 6px 10px; font-size: 12px; }
+    .combo-display { top: 62px; right: 10px; }
+    #combo-count { font-size: 32px; }
+    #combo-multiplier { font-size: 14px; }
 
     #bottom-area {
         height: auto;
@@ -832,4 +1057,6 @@ body {
     .customer-body { font-size: 54px; }
     .modal-content { padding: 24px 16px; }
     .shop-cards { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+    .mode-btn { min-width: 90px; padding: 14px 16px; }
+    .mode-time { font-size: 28px; }
 }

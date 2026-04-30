@@ -2,22 +2,26 @@
 const GAME_CONFIG = {
     fps: 60,
     maxHappiness: 100,
-    baseSpawnRate: 15000,
-    minSpawnRate: 4000,
-    spawnRateDecay: 1000,
+    baseSpawnRate: 8000,
+    minSpawnRate: 3000,
+    spawnRateDecay: 500,
     basePatienceTime: 40000,
     minPatienceTime: 18000,
     patienceDecay: 2000,
-    maxCustomers: 3,
+    maxCustomers: 4,
+    minActiveCustomers: 2,
     cookTime: 8000,
-    customersPerDay: 10,
     maxGrillSlots: 4,
-    maxPrepSlots: 5
+    maxPrepSlots: 5,
+    comboWindow: 4000,
+    comboGrace: 500,
+    maxMultiplier: 4
 };
 
 function getSpawnRate() {
     if (gameState.phase === 'TUTORIAL') return 999999;
-    return Math.max(GAME_CONFIG.minSpawnRate, GAME_CONFIG.baseSpawnRate - (gameState.day * GAME_CONFIG.spawnRateDecay));
+    const elapsed = (performance.now() - gameState.startTimestamp) / 60000;
+    return Math.max(GAME_CONFIG.minSpawnRate, GAME_CONFIG.baseSpawnRate - (elapsed * GAME_CONFIG.spawnRateDecay));
 }
 function getPatienceTime() {
     if (gameState.phase === 'TUTORIAL') return 999999;
@@ -26,7 +30,7 @@ function getPatienceTime() {
 
 // Game State
 let gameState = {
-    phase: 'START_SCREEN', // START_SCREEN, TUTORIAL, PLAYING
+    phase: 'MODE_SELECT',
     tutorialStep: 0,
     isRunning: false,
     lastTime: 0,
@@ -41,7 +45,20 @@ let gameState = {
     prepBoard: [[], [], []],
     grillSlotCount: 2,
     prepSlotCount: 3,
-    
+
+    // Timer
+    timeLimit: 300000,
+    gameTimer: 300000,
+    startTimestamp: 0,
+
+    // Combo System
+    combo: 0,
+    comboTimer: 0,
+    comboWindow: GAME_CONFIG.comboWindow,
+    maxCombo: 0,
+    lastServeTime: 0,
+    totalServed: 0,
+
     // Progression State
     zen: 0,
     isGoldenHour: false,
@@ -52,6 +69,11 @@ let gameState = {
     isShopOpen: false,
     upgrades: { fairyLights: false, cat: false, coffee: false, mishnan: false }
 };
+
+function getComboMultiplier() {
+    return Math.min(GAME_CONFIG.maxMultiplier, 1 + gameState.combo * 0.2);
+}
+
 
 // DOM Elements
 const ui = {
@@ -234,10 +256,20 @@ function gameLoop(timestamp) {
 
 // Update game logic
 function update(deltaTime) {
-    if (gameState.isShopOpen) return; // Halt loop during shop
+    if (gameState.isShopOpen) return;
+
+    // Game Timer countdown
+    if (gameState.phase === 'PLAYING') {
+        gameState.gameTimer -= deltaTime;
+        if (gameState.gameTimer <= 0) {
+            gameState.gameTimer = 0;
+            endGame();
+            return;
+        }
+    }
 
     // Basic happiness pulse
-    gameState.happiness = 50 + Math.sin(gameState.lastTime / 500) * 5; 
+    gameState.happiness = 50 + Math.sin(gameState.lastTime / 500) * 5;
 
     // Golden Hour
     if (gameState.isGoldenHour) {
@@ -249,18 +281,26 @@ function update(deltaTime) {
         }
     }
 
-    // Customer Spawning (stop at customersPerDay)
-    if (gameState.customersSpawnedThisDay < GAME_CONFIG.customersPerDay) {
-        if (gameState.lastTime - gameState.lastCustomerSpawnTime > getSpawnRate()) {
+    // Combo Decay (soft)
+    if (gameState.combo > 0 && gameState.phase === 'PLAYING') {
+        gameState.comboTimer += deltaTime;
+        if (gameState.comboTimer > gameState.comboWindow + GAME_CONFIG.comboGrace) {
+            gameState.combo = Math.max(0, gameState.combo - 2);
+            gameState.comboTimer = 0;
+            updateComboUI();
+        }
+    }
+
+    // Customer Spawning — continuous in timed mode
+    if (gameState.phase === 'PLAYING') {
+        const needsMinimum = gameState.customers.length < GAME_CONFIG.minActiveCustomers;
+        const spawnReady = gameState.lastTime - gameState.lastCustomerSpawnTime > getSpawnRate();
+        if (needsMinimum || spawnReady) {
             if (gameState.customers.length < GAME_CONFIG.maxCustomers) {
                 spawnCustomer();
-                gameState.customersSpawnedThisDay++;
             }
             gameState.lastCustomerSpawnTime = gameState.lastTime;
         }
-    } else if (gameState.customers.length === 0) {
-        // Shift Complete!
-        openShop();
     }
 
     // Mishnan Auto-Serve Logic (Step 6)
@@ -360,7 +400,7 @@ function spawnCustomer() {
 function render() {
     ui.happinessScore.innerText = gameState.score;
     ui.levelDisplay.innerText = gameState.day;
-    
+
     // Update happiness bar width
     const happinessPercent = Math.max(0, Math.min(100, gameState.happiness));
     ui.happinessBar.style.width = `${happinessPercent}%`;
@@ -368,6 +408,16 @@ function render() {
     // Render Zen Meter
     const zenPercent = gameState.isGoldenHour ? 100 : gameState.zen;
     ui.zenBar.style.width = `${zenPercent}%`;
+
+    // Render Timer
+    const timerEl = document.getElementById('timer-display');
+    if (timerEl && gameState.phase === 'PLAYING') {
+        const secs = Math.ceil(gameState.gameTimer / 1000);
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        document.getElementById('timer-text').innerText = `${m}:${s.toString().padStart(2, '0')}`;
+        timerEl.classList.toggle('timer-warning', secs <= 30);
+    }
 
     // Render customer patience bars
     gameState.customers.forEach(customer => {
@@ -444,10 +494,15 @@ function render() {
 
 // Initialization
 function initGame() {
-    ui.startBtn.addEventListener('click', () => {
-        ui.startModal.style.display = 'none';
-        audioManager.playBGM();
-        startGame();
+    // Mode selection buttons
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            gameState.timeLimit = parseInt(btn.dataset.time);
+            gameState.gameTimer = gameState.timeLimit;
+            document.getElementById('start-modal').style.display = 'none';
+            audioManager.playBGM();
+            startGame();
+        });
     });
 }
 
@@ -457,36 +512,158 @@ function startGame() {
     gameState.isRunning = true;
     gameState.score = 0;
     gameState.happiness = 50;
+    gameState.combo = 0;
+    gameState.comboTimer = 0;
+    gameState.comboWindow = GAME_CONFIG.comboWindow;
+    gameState.maxCombo = 0;
+    gameState.totalServed = 0;
     gameState.lastTime = performance.now();
+    gameState.startTimestamp = performance.now();
     gameState.lastCustomerSpawnTime = gameState.lastTime;
-    
+
+    // Show timer + shop button
+    document.getElementById('timer-display').style.display = 'block';
+    document.getElementById('shop-toggle-btn').style.display = 'block';
+    document.getElementById('combo-display').style.display = 'block';
+
     // Setup event listeners
     ui.pauseBtn.addEventListener('click', togglePause);
     ui.resumeBtn.addEventListener('click', togglePause);
-    
+
+    // Shop toggle (always accessible)
+    document.getElementById('shop-toggle-btn').addEventListener('click', () => {
+        audioManager.playSound('click');
+        toggleShop();
+    });
+    document.getElementById('close-shop-btn').addEventListener('click', () => {
+        audioManager.playSound('click');
+        toggleShop();
+    });
+
+    // Play again
+    document.getElementById('play-again-btn').addEventListener('click', () => {
+        audioManager.playSound('click');
+        document.getElementById('results-modal').style.display = 'none';
+        resetGame();
+    });
+
     ui.toggleBgmBtn.addEventListener('click', () => {
         audioManager.playSound('click');
         const isEnabled = audioManager.toggleBGM();
         ui.toggleBgmBtn.innerText = isEnabled ? '🎵 BGM: ON' : '🎵 BGM: OFF';
     });
-    
+
     ui.toggleSfxBtn.addEventListener('click', () => {
         audioManager.playSound('click');
         const isEnabled = audioManager.toggleSFX();
         ui.toggleSfxBtn.innerText = isEnabled ? '🔊 SFX: ON' : '🔊 SFX: OFF';
     });
-    
-    setupInteractions();
-    
-    // Start tutorial
-    advanceTutorial();
 
-    // Initial Render
+    setupInteractions();
+    advanceTutorial();
     render();
-    
-    // Start loop
+    updateComboUI();
     requestAnimationFrame(gameLoop);
-    console.log("Emine's Cozy Cafe started!");
+}
+
+function endGame() {
+    gameState.isRunning = false;
+    gameState.isShopOpen = false;
+    ui.shopModal.style.display = 'none';
+    audioManager.stopBGM();
+
+    // Show results
+    document.getElementById('result-score').innerText = gameState.score;
+    document.getElementById('result-served').innerText = gameState.totalServed;
+    document.getElementById('result-combo').innerText = gameState.maxCombo;
+    document.getElementById('result-multiplier').innerText = `x${getComboMultiplier().toFixed(1)}`;
+    document.getElementById('results-modal').style.display = 'flex';
+}
+
+function resetGame() {
+    // Clear customers
+    gameState.customers.forEach(c => { if (c.element.parentNode) c.element.parentNode.removeChild(c.element); });
+    gameState.customers = [];
+    gameState.steamer = [null, null];
+    gameState.grill = [null, null];
+    gameState.coffee = [null];
+    gameState.prepBoard = [[], [], []];
+    gameState.grillSlotCount = 2;
+    gameState.prepSlotCount = 3;
+    gameState.day = 1;
+    gameState.gameTimer = gameState.timeLimit;
+    gameState.zen = 0;
+    gameState.isGoldenHour = false;
+    gameState.mishnanTimer = 0;
+    gameState.upgrades = { fairyLights: false, cat: false, coffee: false, mishnan: false };
+    ui.gameContainer.classList.remove('golden-hour', 'has-fairy-lights');
+    document.getElementById('sleeping-cat').style.display = 'none';
+    document.getElementById('drink-station').style.display = 'none';
+    document.getElementById('mishnan-sprite').classList.add('hidden');
+
+    // Restart
+    gameState.phase = 'TUTORIAL';
+    gameState.tutorialStep = 0;
+    gameState.isRunning = true;
+    gameState.score = 0;
+    gameState.combo = 0;
+    gameState.maxCombo = 0;
+    gameState.totalServed = 0;
+    gameState.lastTime = performance.now();
+    gameState.startTimestamp = performance.now();
+    gameState.lastCustomerSpawnTime = gameState.lastTime;
+    renderAllSlots();
+    advanceTutorial();
+    render();
+    updateComboUI();
+    requestAnimationFrame(gameLoop);
+}
+
+function toggleShop() {
+    gameState.isShopOpen = !gameState.isShopOpen;
+    if (gameState.isShopOpen) {
+        ui.shopModal.style.display = 'flex';
+        updateShopButtons();
+    } else {
+        ui.shopModal.style.display = 'none';
+    }
+}
+
+// Combo UI
+function updateComboUI() {
+    const display = document.getElementById('combo-display');
+    const countEl = document.getElementById('combo-count');
+    const multEl = document.getElementById('combo-multiplier');
+    if (!display) return;
+
+    countEl.innerText = gameState.combo;
+    multEl.innerText = `x${getComboMultiplier().toFixed(1)}`;
+
+    display.classList.remove('combo-hot', 'combo-fire');
+    if (gameState.combo >= 8) display.classList.add('combo-fire');
+    else if (gameState.combo >= 4) display.classList.add('combo-hot');
+
+    // Bump animation
+    countEl.classList.remove('combo-bump');
+    void countEl.offsetWidth; // force reflow
+    if (gameState.combo > 0) countEl.classList.add('combo-bump');
+}
+
+function showFloatingText(text, x, y) {
+    const el = document.createElement('div');
+    el.className = 'floating-text';
+    el.innerText = text;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+}
+
+function triggerScreenPulse() {
+    ui.gameContainer.classList.remove('combo-screen-pulse');
+    void ui.gameContainer.offsetWidth;
+    ui.gameContainer.classList.add('combo-screen-pulse');
+    setTimeout(() => ui.gameContainer.classList.remove('combo-screen-pulse'), 500);
 }
 
 // Pause logic
@@ -859,27 +1036,86 @@ function executeDrop(data, targetZone, targetIndex, targetElement) {
             else if (draggedItemValue.length === 1 && draggedItemValue[0] === order) isMatch = true;
             
             if (isMatch) {
-                audioManager.playSound('success');
-                let points = 10;
-                if (customer.state === 'bonus') points += Math.floor(customer.patience / 10); 
-                if (gameState.isGoldenHour) points *= 2; 
-                
-                gameState.score += points;
-                gameState.happiness = Math.min(GAME_CONFIG.maxHappiness, gameState.happiness + points);
-
-                if (!gameState.isGoldenHour && gameState.phase !== 'TUTORIAL') {
-                    gameState.zen += 20; 
-                    if (gameState.zen >= 100) {
-                        gameState.zen = 100;
-                        gameState.isGoldenHour = true;
-                        gameState.goldenHourTimer = 15000;
-                        ui.gameContainer.classList.add('golden-hour');
-                        audioManager.setGoldenHourBGM(true);
-                        gameState.zen = 0; 
+                if (gameState.phase !== 'TUTORIAL') {
+                    // Update combo state
+                    gameState.combo++;
+                    gameState.comboTimer = 0;
+                    if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+                    
+                    // Serve time calculations for Combo Window adjustment
+                    const serveTime = performance.now() - customer.id;
+                    if (serveTime < 5000) {
+                        gameState.comboWindow = Math.min(6000, gameState.comboWindow + 500);
+                        showFloatingText('FAST!', targetElement.getBoundingClientRect().left, targetElement.getBoundingClientRect().top - 20);
+                    } else if (serveTime > 15000) {
+                        gameState.comboWindow = Math.max(2500, gameState.comboWindow - 500);
                     }
+                    
+                    // Calculate multiplier
+                    const multiplier = getComboMultiplier();
+                    
+                    // Pitch bending sound
+                    const baseFreq = 523.25; // C5
+                    const pitchFreq = baseFreq + (gameState.combo * 40);
+                    audioManager.playTone(pitchFreq, 'sine', 0.2, 0.1);
+                    if (gameState.combo % 5 === 0) {
+                        audioManager.playSound('success');
+                        triggerScreenPulse();
+                        celebrate(ui.gameContainer);
+                    }
+                    
+                    // Update stats
+                    let points = Math.floor(10 * multiplier);
+                    if (customer.state === 'bonus') points += Math.floor((customer.patience / 10) * multiplier); 
+                    if (gameState.isGoldenHour) points *= 2; 
+                    
+                    gameState.score += points;
+                    gameState.happiness = Math.min(GAME_CONFIG.maxHappiness, gameState.happiness + points);
+                    gameState.totalServed++;
+                    gameState.customersServedThisDay++;
+                    
+                    // Zen integration
+                    if (!gameState.isGoldenHour) {
+                        gameState.zen += gameState.combo * 5; 
+                        if (gameState.zen >= 100) {
+                            gameState.zen = 100;
+                            gameState.isGoldenHour = true;
+                            gameState.goldenHourTimer = 15000;
+                            ui.gameContainer.classList.add('golden-hour');
+                            audioManager.setGoldenHourBGM(true);
+                            gameState.zen = 0; 
+                        }
+                    }
+                    
+                    // Adrenaline Unlocks (Free)
+                    if (gameState.combo === 5 && !gameState.unlocks?.extraGrill) {
+                        gameState.unlocks = gameState.unlocks || {};
+                        gameState.unlocks.extraGrill = true;
+                        if (gameState.grillSlotCount < GAME_CONFIG.maxGrillSlots) {
+                            gameState.grillSlotCount++;
+                            gameState.grill.push(null);
+                            renderGrillSlots();
+                            rebindPointerEvents();
+                            showFloatingText('UNLOCK: EXTRA GRILL!', window.innerWidth / 2 - 100, window.innerHeight / 2 - 50);
+                        }
+                    }
+                    if (gameState.combo === 8 && !gameState.unlocks?.extraPrep) {
+                        gameState.unlocks = gameState.unlocks || {};
+                        gameState.unlocks.extraPrep = true;
+                        if (gameState.prepSlotCount < GAME_CONFIG.maxPrepSlots) {
+                            gameState.prepSlotCount++;
+                            gameState.prepBoard.push([]);
+                            renderPrepSlots();
+                            rebindPointerEvents();
+                            showFloatingText('UNLOCK: EXTRA PREP!', window.innerWidth / 2 - 100, window.innerHeight / 2 - 50);
+                        }
+                    }
+                    
+                    updateComboUI();
+                } else {
+                    audioManager.playSound('success');
                 }
                 
-                gameState.customersServedThisDay++;
                 celebrate(customer.element);
                 customer.element.classList.add('served');
                 const cEl = customer.element;

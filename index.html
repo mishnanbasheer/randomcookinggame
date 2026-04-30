@@ -12,6 +12,7 @@
         <!-- Top Bar -->
         <header id="top-bar">
             <div class="level-indicator">Day <span id="level-display">1</span></div>
+            <div id="timer-display" class="timer-display" style="display:none;">⏱️ <span id="timer-text">5:00</span></div>
             <div class="happiness-meter">
                 <div class="happiness-icon">💖</div>
                 <div class="happiness-bar-container">
@@ -26,8 +27,16 @@
                     <div id="zen-bar"></div>
                 </div>
             </div>
-            <button id="pause-btn">⚙️ Settings</button>
+            <button id="shop-toggle-btn" style="display:none;">🛒 Shop</button>
+            <button id="pause-btn">⚙️</button>
         </header>
+
+        <!-- Combo HUD -->
+        <div id="combo-display" class="combo-display" style="display:none;">
+            <div id="combo-count">0</div>
+            <div id="combo-label">COMBO</div>
+            <div id="combo-multiplier">x1.0</div>
+        </div>
 
         <!-- Center Stage -->
         <main id="center-stage">
@@ -62,7 +71,6 @@
                         <div class="bins-column">
                             <div class="bin" id="bin-batter" draggable="true" data-ingredient="🥟">🥣<br>Batter</div>
                         </div>
-                        <!-- Steamer slots injected by JS -->
                         <div class="cooking-slots" id="steamer-slots-container"></div>
                     </div>
                 </div>
@@ -75,7 +83,6 @@
                             <div class="bin" id="bin-bot-bun" draggable="true" data-ingredient="🍞bot">🍞<br>Bot Bun</div>
                             <div class="bin" id="bin-top-bun" draggable="true" data-ingredient="🍔top">🍔<br>Top Bun</div>
                         </div>
-                        <!-- Prep slots injected by JS -->
                         <div class="prep-slots" id="prep-slots-container"></div>
                         <div class="bins-column">
                             <div class="bin" id="bin-lettuce" draggable="true" data-ingredient="🥬">🥬<br>Lettuce</div>
@@ -92,7 +99,6 @@
                             <div class="bin" id="bin-dough" draggable="true" data-ingredient="🍩">🥯<br>Dough</div>
                             <div class="bin" id="bin-patty" draggable="true" data-ingredient="🥩">🥩<br>Patty</div>
                         </div>
-                        <!-- Grill slots injected by JS -->
                         <div class="cooking-slots" id="grill-slots-container"></div>
                     </div>
                 </div>
@@ -110,11 +116,11 @@
             </div>
         </footer>
 
-        <!-- Shop Modal -->
+        <!-- Shop Modal (accessible anytime) -->
         <div id="shop-modal" class="modal-overlay" style="display:none;">
             <div class="modal-content">
-                <h2>Shift Complete! 🎉</h2>
-                <p>Great job, Emine! Customers are feeling cozy.</p>
+                <h2>🛒 Emine's Shop</h2>
+                <p>Spend your 💖 to upgrade the cafe!</p>
                 <div class="shop-cards">
                     <div class="shop-card" id="card-lights">
                         <div class="card-icon">✨</div>
@@ -134,7 +140,6 @@
                         <p>New menu item!</p>
                         <button class="buy-btn" data-upgrade="coffee" data-cost="150">Buy (150 💖)</button>
                     </div>
-                    <!-- Infrastructure Upgrades -->
                     <div class="shop-card" id="card-extra-grill">
                         <div class="card-icon">🔥</div>
                         <h3>Extra Grill Pan</h3>
@@ -147,7 +152,6 @@
                         <p>More assembly slots! (Max 5)</p>
                         <button class="buy-btn" data-upgrade="expandPrep" data-cost="250">Buy (250 💖)</button>
                     </div>
-                    <!-- Mishnan -->
                     <div class="shop-card" id="card-mishnan">
                         <div class="card-icon">👨‍🍳</div>
                         <h3>Hire Mishnan</h3>
@@ -155,7 +159,21 @@
                         <button class="buy-btn" data-upgrade="mishnan" data-cost="300">Buy (300 💖)</button>
                     </div>
                 </div>
-                <button id="next-shift-btn">Start Next Shift ➡️</button>
+                <button id="close-shop-btn" class="buy-btn" style="margin-top: 20px; background: var(--accent-blue); font-size: 16px; padding: 12px 30px;">✖ Close Shop</button>
+            </div>
+        </div>
+
+        <!-- Results Modal -->
+        <div id="results-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content results-content">
+                <h2>⏰ Time's Up!</h2>
+                <div class="results-stats">
+                    <div class="result-row"><span>💖 Final Score</span><span id="result-score">0</span></div>
+                    <div class="result-row"><span>🍔 Customers Served</span><span id="result-served">0</span></div>
+                    <div class="result-row"><span>🔥 Best Combo</span><span id="result-combo">0</span></div>
+                    <div class="result-row"><span>⚡ Multiplier Peak</span><span id="result-multiplier">x1.0</span></div>
+                </div>
+                <button id="play-again-btn" class="buy-btn" style="margin-top: 24px; background: var(--accent-blue); font-size: 18px; padding: 14px 30px;">🔄 Play Again</button>
             </div>
         </div>
 
@@ -171,12 +189,29 @@
             </div>
         </div>
 
-        <!-- Start Screen Modal -->
+        <!-- Mode Selection / Start Screen -->
         <div id="start-modal" class="modal-overlay">
             <div class="modal-content">
                 <h2>Welcome to Emine's Cozy Cafe! 🥟</h2>
-                <p>Drag and drop your way to cozy success!<br><small style="opacity:0.7;">Works on mobile too! 📱</small></p>
-                <button id="start-btn" class="buy-btn" style="margin-top: 20px; font-size: 20px; padding: 15px 30px; background: var(--accent-blue);">Start Shift</button>
+                <p>Pick your shift length!</p>
+                <div class="mode-buttons">
+                    <button class="mode-btn" data-time="300000">
+                        <span class="mode-time">5</span>
+                        <span class="mode-unit">MIN</span>
+                        <span class="mode-label">Quick Shift</span>
+                    </button>
+                    <button class="mode-btn mode-btn-featured" data-time="600000">
+                        <span class="mode-time">10</span>
+                        <span class="mode-unit">MIN</span>
+                        <span class="mode-label">Standard</span>
+                    </button>
+                    <button class="mode-btn" data-time="900000">
+                        <span class="mode-time">15</span>
+                        <span class="mode-unit">MIN</span>
+                        <span class="mode-label">Marathon</span>
+                    </button>
+                </div>
+                <small style="opacity:0.6; margin-top: 12px; display:block;">Works on mobile too! 📱</small>
             </div>
         </div>
     </div>
