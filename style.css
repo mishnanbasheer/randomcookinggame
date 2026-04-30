@@ -32,9 +32,6 @@ html, body {
 .game-wrapper {
     position: fixed;
     inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     background: #fdf6f0;
     overflow: hidden;
 }
@@ -42,9 +39,8 @@ html, body {
 .game-container {
     width: 1000px;
     height: 562px;
-    position: relative;
-    flex-shrink: 0;
-    transform-origin: center center;
+    position: absolute;
+    transform-origin: top left;
     display: grid;
     grid-template-rows: 12% 58% 30%;
     grid-template-columns: 100%;
@@ -52,7 +48,6 @@ html, body {
     box-shadow: 0 0 40px rgba(0,0,0,0.5);
     border-radius: 10px;
     overflow: hidden;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 /* --- Top Bar (Row 1) --- */

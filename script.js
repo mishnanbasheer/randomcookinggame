@@ -1306,15 +1306,21 @@ function scaleGame() {
     const baseWidth = 1000;
     const baseHeight = 562;
 
-    // Use visualViewport to account for browser chrome (address bar, etc.)
     const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
     const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
 
     const scale = Math.min(vw / baseWidth, vh / baseHeight);
 
+    // Explicitly calculate pixel offsets to perfectly center the scaled container
+    const scaledW = baseWidth * scale;
+    const scaledH = baseHeight * scale;
+    const offsetX = (vw - scaledW) / 2;
+    const offsetY = (vh - scaledH) / 2;
+
     const game = document.querySelector(".game-container");
     if (game) {
-        // Flex centering handles position — only scale needed
+        game.style.left = offsetX + 'px';
+        game.style.top = offsetY + 'px';
         game.style.transform = `scale(${scale})`;
     }
 }
