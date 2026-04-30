@@ -1369,8 +1369,12 @@ if (window.visualViewport) {
     });
 }
 
-// Run once on load
-window.addEventListener("DOMContentLoaded", () => {
+// Script is at end of <body> so DOM is already ready — call directly
+scaleGame();
+checkOrientation();
+
+// Also call on window load (images/fonts loaded, final layout settled)
+window.addEventListener("load", () => {
     scaleGame();
     checkOrientation();
 });
