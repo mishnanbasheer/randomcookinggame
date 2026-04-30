@@ -19,19 +19,24 @@
     -webkit-user-select: none;
 }
 
-html, body {
+html {
     font-family: 'Nunito', sans-serif;
     background-color: #FFF9E6;
+    overflow: hidden;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    position: fixed;
     overscroll-behavior: none;
     touch-action: manipulation;
-    -webkit-text-size-adjust: 100%;
     -webkit-overflow-scrolling: touch;
+    /* Do NOT use position:fixed on body — it breaks drag ghost positioning */
 }
 
 .game-wrapper {
@@ -56,7 +61,18 @@ html, body {
     padding-right: env(safe-area-inset-right);
 }
 
-/* --- Top Bar (Row 1) --- */
+#drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 99999;
+    font-size: 48px;
+    line-height: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+    display: none;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+    transition: none;
+}
+
 #top-bar {
     height: 100%;
     background-color: rgba(255, 255, 255, 0.7);
