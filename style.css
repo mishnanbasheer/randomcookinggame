@@ -25,14 +25,16 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 100vh; /* Fallback */
+    height: 100dvh;
     overflow: hidden;
 }
 
 #game-container {
     width: 100%;
     max-width: 1024px;
-    height: 100vh;
+    height: 100vh; /* Fallback */
+    height: 100dvh;
     max-height: 768px;
     background-color: var(--bg-color);
     position: relative;
@@ -1018,45 +1020,52 @@ body {
 /* ===== MOBILE RESPONSIVE ===== */
 @media (max-width: 600px) {
     #top-bar {
-        height: 56px;
-        padding: 0 8px;
-        gap: 6px;
+        height: auto;
+        min-height: 56px;
+        padding: 6px 4px;
+        gap: 4px;
+        flex-wrap: wrap;
+        justify-content: center;
     }
-    .level-indicator { font-size: 14px; padding: 5px 10px; }
-    .timer-display { font-size: 15px; padding: 5px 10px; }
-    .happiness-meter { padding: 6px 10px; gap: 6px; }
-    .happiness-bar-container { width: 60px; }
-    #happiness-score { font-size: 14px; min-width: 28px; }
+    .level-indicator { font-size: 13px; padding: 4px 8px; }
+    .timer-display { font-size: 13px; padding: 4px 8px; }
+    .happiness-meter { padding: 4px 8px; gap: 4px; }
+    .happiness-bar-container { width: 50px; }
+    #happiness-score { font-size: 13px; min-width: 24px; }
     .zen-meter { display: none; }
-    #pause-btn { padding: 6px 10px; font-size: 14px; }
-    #shop-toggle-btn { padding: 6px 10px; font-size: 12px; }
-    .combo-display { top: 62px; right: 10px; }
-    #combo-count { font-size: 32px; }
-    #combo-multiplier { font-size: 14px; }
+    #pause-btn { padding: 4px 8px; font-size: 12px; }
+    #shop-toggle-btn { padding: 4px 8px; font-size: 12px; }
+    .combo-display { top: 62px; right: 10px; transform: scale(0.8); transform-origin: top right; }
+
+    #middle-area {
+        overflow-x: auto;
+        padding-bottom: 20px;
+    }
 
     #bottom-area {
         height: auto;
-        min-height: 200px;
-        padding: 10px;
+        min-height: 180px;
+        padding: 6px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
     #cooking-station {
         flex-direction: row;
         flex-wrap: nowrap;
-        gap: 10px;
-        overflow-x: auto;
-        height: auto;
+        gap: 6px;
+        width: max-content;
     }
     .station-section {
-        min-width: 100px;
-        padding: 10px 8px;
+        min-width: 80px;
+        padding: 6px;
     }
-    .station-section h3 { font-size: 11px; }
-    .bin { width: 52px; height: 52px; font-size: 11px; }
-    .cooking-slot { width: 56px; height: 56px; }
-    .prep-slot { width: 60px; height: 60px; }
-    .customer-body { font-size: 54px; }
-    .modal-content { padding: 24px 16px; }
-    .shop-cards { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-    .mode-btn { min-width: 90px; padding: 14px 16px; }
-    .mode-time { font-size: 28px; }
+    .station-section h3 { font-size: 10px; }
+    .bin { width: 48px; height: 48px; font-size: 10px; }
+    .cooking-slot { width: 50px; height: 50px; }
+    .prep-slot { width: 54px; height: 54px; font-size: 28px; }
+    .customer-body { font-size: 48px; }
+    .modal-content { padding: 20px 12px; max-height: 90dvh; overflow-y: auto; }
+    .shop-cards { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+    .mode-btn { min-width: 80px; padding: 10px 12px; }
+    .mode-time { font-size: 24px; }
 }
