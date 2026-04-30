@@ -1314,8 +1314,8 @@ function scaleGame() {
 
     const game = document.querySelector(".game-container");
     if (game) {
-        // translate(-50%, -50%) combined with top:50%/left:50% = perfect center
-        game.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        // Flex centering handles position — only scale needed
+        game.style.transform = `scale(${scale})`;
     }
 }
 
