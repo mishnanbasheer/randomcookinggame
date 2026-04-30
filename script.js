@@ -1299,3 +1299,52 @@ function handleBuy(btn) {
         ui.happinessScore.innerText = gameState.score;
     }
 }
+
+// ===== Mobile Layout & Scaling =====
+
+function scaleGame() {
+    const baseWidth = 1000;
+    const baseHeight = 562;
+
+    const scale = Math.min(
+        window.innerWidth / baseWidth,
+        window.innerHeight / baseHeight
+    );
+
+    const game = document.querySelector(".game-container");
+    if (game) {
+        game.style.transform = `scale(${scale})`;
+    }
+}
+
+function checkOrientation() {
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const overlay = document.getElementById('portrait-overlay');
+    if (!overlay) return;
+    
+    if (isPortrait) {
+        overlay.style.display = 'flex';
+        if (gameState.isRunning) {
+            gameState.wasRunning = true;
+            gameState.isRunning = false; // Pause game
+        }
+    } else {
+        overlay.style.display = 'none';
+        if (gameState.wasRunning) {
+            gameState.isRunning = true;
+            gameState.lastTime = performance.now(); // Reset delta calculation
+            gameState.wasRunning = false;
+        }
+    }
+}
+
+window.addEventListener("resize", () => {
+    scaleGame();
+    checkOrientation();
+});
+
+// Run once on load
+window.addEventListener("DOMContentLoaded", () => {
+    scaleGame();
+    checkOrientation();
+});

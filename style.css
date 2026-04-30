@@ -19,35 +19,47 @@
     -webkit-user-select: none;
 }
 
-body {
+html, body {
     font-family: 'Nunito', sans-serif;
     background-color: #222;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+}
+
+.game-wrapper {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh; /* Fallback */
-    height: 100dvh;
+    background: #fdf6f0;
     overflow: hidden;
 }
 
-#game-container {
+.game-container {
+    aspect-ratio: 16 / 9;
     width: 100%;
-    max-width: 1024px;
-    height: 100vh; /* Fallback */
-    height: 100dvh;
-    max-height: 768px;
-    background-color: var(--bg-color);
+    max-width: 1000px;
+    max-height: 100%;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 0 40px rgba(0,0,0,0.5);
     overflow: hidden;
+    transform-origin: center;
+    display: grid;
+    grid-template-rows: 12% 58% 30%;
+    grid-template-columns: 100%;
+    background-color: var(--bg-color);
+    box-shadow: 0 0 40px rgba(0,0,0,0.5);
     border-radius: 10px;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-/* --- Top Bar --- */
+/* --- Top Bar (Row 1) --- */
 #top-bar {
-    height: 70px;
+    height: 100%;
     background-color: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     display: flex;
@@ -56,7 +68,6 @@ body {
     gap: 10px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     z-index: 10;
-    flex-shrink: 0;
 }
 
 .timer-display {
@@ -166,9 +177,9 @@ body {
     transform: scale(0.95);
 }
 
-/* --- Center Stage --- */
+/* --- Center Stage (Row 2) --- */
 #center-stage {
-    flex: 1;
+    height: 100%;
     position: relative;
     background: radial-gradient(circle at center, #ffffff 0%, var(--bg-color) 100%);
     display: flex;
@@ -178,21 +189,18 @@ body {
 }
 
 #customer-area {
-    position: absolute;
-    top: 50px;
-    left: 0;
     width: 100%;
-    height: 250px;
+    flex-grow: 1;
     display: flex;
-    justify-content: flex-start;
-    gap: 30px;
+    justify-content: space-evenly;
     align-items: flex-end;
-    padding: 0 50px;
+    padding: 0 20px;
 }
 
 #service-counter {
     width: 100%;
-    height: 100px;
+    height: 25%;
+    min-height: 50px;
     background: linear-gradient(to bottom, #ffe8d6, #ffb5a7);
     border-top: 15px solid #fec89a;
     position: relative;
@@ -201,22 +209,20 @@ body {
     border-top-right-radius: 30px;
 }
 
-/* --- Bottom Area (Cooking Station) --- */
+/* --- Bottom Area (Row 3) --- */
 #bottom-area {
-    height: 260px;
+    height: 100%;
     background-color: white;
     box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-    padding: 20px;
+    padding: 10px 20px;
     z-index: 10;
-    flex-shrink: 0;
 }
 
 #cooking-station {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
     height: 100%;
-    gap: 20px;
-    overflow-x: auto;
 }
 
 .station-section {
@@ -504,7 +510,7 @@ body {
 
 #tiffin-cart {
     position: absolute;
-    bottom: 80px;
+    bottom: 15%;
     left: 50%;
     transform: translateX(-50%);
     width: 350px;
@@ -518,7 +524,7 @@ body {
 
 #emine-character {
     position: absolute;
-    bottom: 80px; 
+    bottom: 15%; 
     left: 50%;
     transform: translateX(-50%);
     z-index: 10; 
@@ -547,7 +553,7 @@ body {
 /* Mishnan Sprite */
 #mishnan-sprite {
     position: absolute;
-    bottom: 70px;
+    bottom: 15%;
     left: 35%;
     width: 180px;
     height: 240px;

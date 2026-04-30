@@ -2,13 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>Emine's Cozy Cafe</title>
     <meta name="description" content="A cozy drag-and-drop cooking game — serve customers, expand your kitchen, and master the art of tiffin!">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
+    <div id="portrait-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: #222; color: white; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; font-size: 24px; text-align: center;">
+        <div style="font-size: 64px; margin-bottom: 20px;">📱➡️📺</div>
+        Rotate your device to play!
+    </div>
+    <div class="game-wrapper">
+        <div id="game-container" class="game-container">
         <!-- Top Bar -->
         <header id="top-bar">
             <div class="level-indicator">Day <span id="level-display">1</span></div>
@@ -214,6 +219,7 @@
                 <small style="opacity:0.6; margin-top: 12px; display:block;">Works on mobile too! 📱</small>
             </div>
         </div>
+    </div>
     </div>
     <script src="script.js"></script>
 </body>
