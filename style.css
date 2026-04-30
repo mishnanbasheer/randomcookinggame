@@ -41,10 +41,8 @@ html, body {
 }
 
 .game-container {
-    aspect-ratio: 16 / 9;
-    width: 100%;
-    max-width: 1000px;
-    max-height: 100%;
+    width: 1000px;
+    height: 562px;
     position: relative;
     overflow: hidden;
     transform-origin: center;

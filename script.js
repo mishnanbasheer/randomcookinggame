@@ -1306,10 +1306,10 @@ function scaleGame() {
     const baseWidth = 1000;
     const baseHeight = 562;
 
-    const scale = Math.min(
-        window.innerWidth / baseWidth,
-        window.innerHeight / baseHeight
-    );
+    const scaleX = window.innerWidth / baseWidth;
+    const scaleY = window.innerHeight / baseHeight;
+
+    const scale = Math.min(scaleX, scaleY);
 
     const game = document.querySelector(".game-container");
     if (game) {
@@ -1341,6 +1341,14 @@ function checkOrientation() {
 window.addEventListener("resize", () => {
     scaleGame();
     checkOrientation();
+});
+
+window.addEventListener("orientationchange", () => {
+    // Slight delay to allow window dimensions to update on mobile devices
+    setTimeout(() => {
+        scaleGame();
+        checkOrientation();
+    }, 100);
 });
 
 // Run once on load
