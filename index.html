@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emine's Cozy Cafe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Top Bar -->
+        <header id="top-bar">
+            <div class="level-indicator">Day <span id="level-display">1</span></div>
+            <div class="happiness-meter">
+                <div class="happiness-icon">💖</div>
+                <div class="happiness-bar-container">
+                    <div id="happiness-bar"></div>
+                </div>
+                <span id="happiness-score">0</span>
+            </div>
+            <!-- Zen Meter -->
+            <div class="zen-meter" title="Zen Combo">
+                <div class="zen-icon">✨</div>
+                <div class="zen-bar-container">
+                    <div id="zen-bar"></div>
+                </div>
+            </div>
+            <button id="pause-btn">⚙️ Settings</button>
+        </header>
+
+        <!-- Center Stage -->
+        <main id="center-stage">
+            <div id="fairy-lights-container"></div>
+            <div id="mumbai-tiffins-logo"></div>
+            <div id="tiffin-cart"></div>
+            <!-- Mishnan Sprite -->
+            <div id="mishnan-sprite" class="hidden">
+                <div style="font-size: 150px; position:absolute; bottom: -20px; left: 50%; transform: translateX(-50%); z-index: -1;">👨🏽‍🍳</div>
+                <div id="tutorial-bubble" class="speech-bubble" style="display:none; width: 220px; left: 110%; top: -80px; text-align: left; z-index: 100;">
+                    Welcome to the Cafe!
+                </div>
+            </div>
+            <div id="emine-character">
+                <div class="emine-sprite"></div>
+            </div>
+            <div id="customer-area">
+                <!-- Customers will appear here -->
+            </div>
+            <div id="service-counter">
+                <div class="counter-top"></div>
+            </div>
+        </main>
+
+        <!-- Bottom Area -->
+        <footer id="bottom-area">
+            <div id="cooking-station">
+                <!-- Zone A: Idli Station -->
+                <div id="idli-station" class="station-section">
+                    <h3>Idli Steamer</h3>
+                    <div class="station-interactive">
+                        <div class="bins-column">
+                            <div class="bin" id="bin-batter" draggable="true" data-ingredient="🥟">🥣<br>Batter</div>
+                        </div>
+                        <div class="cooking-slots">
+                            <div class="steamer-slot cooking-slot dropzone" id="steamer-1" data-zone="steamer" data-index="0"></div>
+                            <div class="steamer-slot cooking-slot dropzone" id="steamer-2" data-zone="steamer" data-index="1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prep Board / Assembly Station -->
+                <div id="prep-board" class="station-section" style="flex: 2;">
+                    <h3>Assembly Station <span id="sleeping-cat" style="display:none;">🐈</span></h3>
+                    <div class="station-interactive">
+                        <div class="bins-column">
+                            <div class="bin" id="bin-bot-bun" draggable="true" data-ingredient="🍞bot">🍞<br>Bot Bun</div>
+                            <div class="bin" id="bin-top-bun" draggable="true" data-ingredient="🍔top">🍔<br>Top Bun</div>
+                        </div>
+                        <div class="prep-slots">
+                            <div class="prep-slot dropzone" id="prep-1" data-zone="prep" data-index="0"></div>
+                            <div class="prep-slot dropzone" id="prep-2" data-zone="prep" data-index="1"></div>
+                            <div class="prep-slot dropzone" id="prep-3" data-zone="prep" data-index="2"></div>
+                        </div>
+                        <div class="bins-column">
+                            <div class="bin" id="bin-lettuce" draggable="true" data-ingredient="🥬">🥬<br>Lettuce</div>
+                            <div class="bin" id="bin-tomato" draggable="true" data-ingredient="🍅">🍅<br>Tomato</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zone B: Grill/Fryer -->
+                <div id="grill-station" class="station-section">
+                    <h3>Grill & Fryer</h3>
+                    <div class="station-interactive">
+                        <div class="bins-column">
+                            <div class="bin" id="bin-dough" draggable="true" data-ingredient="🍩">🥯<br>Dough</div>
+                            <div class="bin" id="bin-patty" draggable="true" data-ingredient="🥩">🥩<br>Patty</div>
+                        </div>
+                        <div class="cooking-slots">
+                            <div class="grill-slot cooking-slot dropzone" id="grill-1" data-zone="grill" data-index="0"></div>
+                            <div class="grill-slot cooking-slot dropzone" id="grill-2" data-zone="grill" data-index="1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drink Station (Hidden initially) -->
+                <div id="drink-station" class="station-section" style="display:none;">
+                    <h3>Filter Coffee</h3>
+                    <div class="station-interactive">
+                        <div class="bin" id="bin-coffee" draggable="true" data-ingredient="☕">🫘<br>Brew</div>
+                        <div class="cooking-slots">
+                            <div class="coffee-slot cooking-slot dropzone" id="coffee-1" data-zone="coffee" data-index="0"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Shop Modal -->
+        <div id="shop-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content">
+                <h2>Shift Complete! 🎉</h2>
+                <p>Great job, Emine! Customers are feeling cozy.</p>
+                <div class="shop-cards">
+                    <div class="shop-card" id="card-lights">
+                        <div class="card-icon">✨</div>
+                        <h3>Fairy Lights</h3>
+                        <p>Adds a cozy twinkle.</p>
+                        <button class="buy-btn" data-upgrade="fairyLights" data-cost="50">Buy (50 💖)</button>
+                    </div>
+                    <div class="shop-card" id="card-cat">
+                        <div class="card-icon">🐈</div>
+                        <h3>Sleeping Cat</h3>
+                        <p>A sleepy friend.</p>
+                        <button class="buy-btn" data-upgrade="cat" data-cost="100">Buy (100 💖)</button>
+                    </div>
+                    <div class="shop-card" id="card-coffee">
+                        <div class="card-icon">☕</div>
+                        <h3>Filter Coffee</h3>
+                        <p>New menu item!</p>
+                        <button class="buy-btn" data-upgrade="coffee" data-cost="150">Buy (150 💖)</button>
+                    </div>
+                    <!-- Mishnan -->
+                    <div class="shop-card" id="card-mishnan">
+                        <div class="card-icon">👨‍🍳</div>
+                        <h3>Hire Mishnan</h3>
+                        <p>Auto-serves occasionally.</p>
+                        <button class="buy-btn" data-upgrade="mishnan" data-cost="300">Buy (300 💖)</button>
+                    </div>
+                </div>
+                <button id="next-shift-btn">Start Next Shift ➡️</button>
+            </div>
+        </div>
+
+        <!-- Pause/Settings Modal -->
+        <div id="pause-modal" class="modal-overlay" style="display:none;">
+            <div class="modal-content">
+                <h2>Game Paused ⏸️</h2>
+                <div class="settings-controls" style="display: flex; gap: 20px; justify-content: center; margin: 30px 0;">
+                    <button id="toggle-bgm" class="buy-btn" style="flex: 1;">🎵 BGM: ON</button>
+                    <button id="toggle-sfx" class="buy-btn" style="flex: 1;">🔊 SFX: ON</button>
+                </div>
+                <button id="resume-btn" class="buy-btn" style="margin-top: 20px; background: var(--accent-blue);">▶️ Resume Game</button>
+            </div>
+        </div>
+
+        <!-- Start Screen Modal -->
+        <div id="start-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2>Welcome to Emine's Cozy Cafe! 🥟</h2>
+                <p>Drag and drop your way to cozy success!</p>
+                <button id="start-btn" class="buy-btn" style="margin-top: 20px; font-size: 20px; padding: 15px 30px; background: var(--accent-blue);">Start Shift</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
