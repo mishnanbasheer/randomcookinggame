@@ -1303,8 +1303,8 @@ function handleBuy(btn) {
 // ===== Mobile Layout & Scaling =====
 
 function scaleGame() {
-    const baseWidth = 1000;
-    const baseHeight = 562;
+    const baseWidth = 390;
+    const baseHeight = 780;
 
     const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
     const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -1313,9 +1313,6 @@ function scaleGame() {
 
     const game = document.querySelector(".game-container");
     if (game) {
-        // top:50% left:50% puts top-left at center.
-        // translate(-50%,-50%) shifts it back by half its own size = perfect center.
-        // scale() then scales around that center point.
         game.style.transform = `translate(-50%, -50%) scale(${scale})`;
     }
 }
@@ -1323,11 +1320,12 @@ function scaleGame() {
 function checkOrientation() {
     const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
     const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    const isPortrait = vh > vw;
+    // Show overlay when LANDSCAPE (width > height) — we want portrait play
+    const isLandscape = vw > vh;
     const overlay = document.getElementById('portrait-overlay');
     if (!overlay) return;
 
-    if (isPortrait) {
+    if (isLandscape) {
         overlay.style.display = 'flex';
         if (gameState.isRunning) {
             gameState.wasRunning = true;
@@ -1340,6 +1338,8 @@ function checkOrientation() {
             gameState.lastTime = performance.now();
             gameState.wasRunning = false;
         }
+        // Re-scale after returning to portrait
+        scaleGame();
     }
 }
 

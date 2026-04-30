@@ -19,6 +19,11 @@
     -webkit-user-select: none;
 }
 
+@keyframes rotate-hint {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(-90deg); }
+}
+
 html {
     font-family: 'Nunito', sans-serif;
     background-color: #FFF9E6;
@@ -50,16 +55,16 @@ body {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 1000px;
-    height: 562px;
+    width: 390px;
+    height: 780px;
     transform-origin: center center;
     /* JS applies: translate(-50%, -50%) scale(X) */
     display: grid;
-    grid-template-rows: 12% 58% 30%;
+    grid-template-rows: 9% 36% 55%;
     grid-template-columns: 100%;
     background-color: var(--bg-color);
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: 20px;
     box-shadow: 0 0 60px rgba(0,0,0,0.4);
 }
 
@@ -237,8 +242,8 @@ body {
 
 #cooking-station {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
     height: 100%;
 }
 
@@ -281,24 +286,25 @@ body {
 
 /* Touch & Drag Ingredients / Bins */
 .bin {
-    width: 65px;
-    height: 65px;
+    width: 58px;
+    height: 58px;
     background: white;
-    border-radius: 15px;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     color: var(--text-color);
     cursor: pointer;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     transition: transform 0.2s, box-shadow 0.2s;
     text-align: center;
     line-height: 1.2;
-    touch-action: none; /* Critical for mobile pointer events */
+    touch-action: none;
     position: relative;
+    user-select: none;
 }
 
 .bin:hover {
