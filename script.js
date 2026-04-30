@@ -1378,3 +1378,21 @@ window.addEventListener("load", () => {
     scaleGame();
     checkOrientation();
 });
+
+// ===== Mobile Touch Hardening =====
+
+// Prevent double-tap zoom (iOS)
+let lastTouchEnd = 0;
+document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) e.preventDefault();
+    lastTouchEnd = now;
+}, { passive: false });
+
+// Prevent pinch zoom
+document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+
+// Prevent pull-to-refresh
+document.body.addEventListener('touchmove', (e) => {
+    if (e.target === document.body) e.preventDefault();
+}, { passive: false });
