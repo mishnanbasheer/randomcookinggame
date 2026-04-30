@@ -1306,50 +1306,62 @@ function scaleGame() {
     const baseWidth = 1000;
     const baseHeight = 562;
 
-    const scaleX = window.innerWidth / baseWidth;
-    const scaleY = window.innerHeight / baseHeight;
+    // Use visualViewport to account for browser chrome (address bar, etc.)
+    const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
 
-    const scale = Math.min(scaleX, scaleY);
+    const scale = Math.min(vw / baseWidth, vh / baseHeight);
 
     const game = document.querySelector(".game-container");
     if (game) {
-        game.style.transform = `scale(${scale})`;
+        // translate(-50%, -50%) combined with top:50%/left:50% = perfect center
+        game.style.transform = `translate(-50%, -50%) scale(${scale})`;
     }
 }
 
 function checkOrientation() {
-    const isPortrait = window.innerHeight > window.innerWidth;
+    const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const isPortrait = vh > vw;
     const overlay = document.getElementById('portrait-overlay');
     if (!overlay) return;
-    
+
     if (isPortrait) {
         overlay.style.display = 'flex';
         if (gameState.isRunning) {
             gameState.wasRunning = true;
-            gameState.isRunning = false; // Pause game
+            gameState.isRunning = false;
         }
     } else {
         overlay.style.display = 'none';
         if (gameState.wasRunning) {
             gameState.isRunning = true;
-            gameState.lastTime = performance.now(); // Reset delta calculation
+            gameState.lastTime = performance.now();
             gameState.wasRunning = false;
         }
     }
 }
 
+// Resize & orientation listeners
 window.addEventListener("resize", () => {
     scaleGame();
     checkOrientation();
 });
 
 window.addEventListener("orientationchange", () => {
-    // Slight delay to allow window dimensions to update on mobile devices
     setTimeout(() => {
         scaleGame();
         checkOrientation();
-    }, 100);
+    }, 150);
 });
+
+// Visual viewport (handles address bar show/hide on mobile)
+if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+        scaleGame();
+        checkOrientation();
+    });
+}
 
 // Run once on load
 window.addEventListener("DOMContentLoaded", () => {
