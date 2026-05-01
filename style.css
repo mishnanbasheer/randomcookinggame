@@ -242,7 +242,7 @@ body {
 
 #cooking-station {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr 2fr 1fr;
     gap: 6px;
     height: 100%;
     padding: 0;
@@ -268,7 +268,9 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
     opacity: 0.8;
-    white-space: nowrap;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
 }
 
 /* --- Interactive Stations --- */
@@ -801,7 +803,7 @@ body {
     align-items: center;
     position: relative;
     animation: slide-up 0.5s ease-out;
-    z-index: 3;
+    z-index: 15; /* Above chef (z-index:10) and counter (z-index:20 handled by counter) */
 }
 
 @keyframes slide-up {

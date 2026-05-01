@@ -203,12 +203,14 @@ class Customer {
         this.patience = 100; // 100% to 0%
         this.state = 'bonus'; // 'bonus' or 'standard'
         
-        // Orders
-        let orders = ['🥟', '🍩', 'burger']; 
-        if (gameState.upgrades.coffee) {
-            orders.push('☕');
+        // Orders — burger-only during tutorial, random after
+        if (gameState.phase === 'TUTORIAL') {
+            this.order = 'burger';
+        } else {
+            let orders = ['🥟', '🍩', 'burger'];
+            if (gameState.upgrades.coffee) orders.push('☕');
+            this.order = orders[Math.floor(Math.random() * orders.length)];
         }
-        this.order = orders[Math.floor(Math.random() * orders.length)];
         
         this.element = this.createElement();
         
