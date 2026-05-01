@@ -1303,8 +1303,8 @@ function handleBuy(btn) {
 // ===== Mobile Layout & Scaling =====
 
 function scaleGame() {
-    const baseWidth = 390;
-    const baseHeight = 780;
+    const baseWidth = 1000;
+    const baseHeight = 560;
 
     const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
     const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -1320,12 +1320,12 @@ function scaleGame() {
 function checkOrientation() {
     const vw = window.visualViewport ? window.visualViewport.width : window.innerWidth;
     const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    // Show overlay when LANDSCAPE (width > height) — we want portrait play
-    const isLandscape = vw > vh;
+    // Show overlay in portrait (height > width) — game is landscape-first
+    const isPortrait = vh > vw;
     const overlay = document.getElementById('portrait-overlay');
     if (!overlay) return;
 
-    if (isLandscape) {
+    if (isPortrait) {
         overlay.style.display = 'flex';
         if (gameState.isRunning) {
             gameState.wasRunning = true;
@@ -1338,7 +1338,6 @@ function checkOrientation() {
             gameState.lastTime = performance.now();
             gameState.wasRunning = false;
         }
-        // Re-scale after returning to portrait
         scaleGame();
     }
 }
