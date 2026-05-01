@@ -59,7 +59,7 @@ body {
     height: 560px;
     transform-origin: center center;
     display: grid;
-    grid-template-rows: 11% 55% 34%;
+    grid-template-rows: 10% 48% 42%;
     grid-template-columns: 100%;
     background-color: var(--bg-color);
     overflow: hidden;
@@ -233,75 +233,78 @@ body {
 /* --- Bottom Area (Row 3) --- */
 #bottom-area {
     height: 100%;
-    background-color: white;
+    background: var(--accent-pink);
     box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-    padding: 10px 20px;
+    padding: 6px 10px;
     z-index: 10;
+    overflow: hidden;
 }
 
 #cooking-station {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 6px;
     height: 100%;
-    padding: 0 4px;
+    padding: 0;
 }
 
 .station-section {
     flex: 1;
     min-width: 0;
     background: var(--bg-color);
-    border-radius: var(--border-radius);
-    padding: 15px;
+    border-radius: 14px;
+    padding: 6px 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
     box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+    overflow: hidden;
 }
 
 .station-section h3 {
     color: var(--text-color);
-    margin-bottom: 10px;
-    font-size: 16px;
+    margin-bottom: 4px;
+    font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 1px;
     opacity: 0.8;
+    white-space: nowrap;
 }
 
 /* --- Interactive Stations --- */
 .station-interactive {
     display: flex;
-    gap: 15px;
+    gap: 8px;
     align-items: center;
     width: 100%;
     justify-content: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .bins-column {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
 }
 
 /* Touch & Drag Ingredients / Bins */
 .bin {
-    width: 58px;
-    height: 58px;
+    width: 54px;
+    height: 54px;
     background: white;
-    border-radius: 12px;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: bold;
     color: var(--text-color);
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    transition: transform 0.15s, box-shadow 0.15s;
     text-align: center;
-    line-height: 1.2;
+    line-height: 1.1;
     touch-action: none;
     position: relative;
     user-select: none;
@@ -315,14 +318,14 @@ body {
 /* Cooking Slots */
 .cooking-slots {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+    gap: 6px;
+    flex-wrap: nowrap;
     justify-content: center;
 }
 
 .cooking-slot {
-    width: 70px;
-    height: 70px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     position: relative;
     cursor: pointer;
@@ -330,7 +333,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    touch-action: none; /* Critical for mobile pointer events */
+    touch-action: none;
+    flex-shrink: 0;
 }
 
 .cooking-slot:hover {
